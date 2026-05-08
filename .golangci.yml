@@ -1,0 +1,74 @@
+linters:
+  enable:
+    - errcheck # Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases
+    - gosimple # Linter for Go source code that specializes in simplifying code
+    - govet # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
+    - ineffassign # Detects when assignments to existing variables are not used 
+    - staticcheck
+    - typecheck # Like the front-end of a Go compiler, parses and type-checks Go code
+    - unused # Checks Go code for unused constants, variables, functions and types
+    - asasalint # check for pass []any as any in variadic func(...any) 
+    - asciicheck # Simple linter to check that your code does not contain non-ASCII identifiers 
+    - bidichk # Checks for dangerous unicode character sequences 
+    - bodyclose # checks whether HTTP response body is closed successfully 
+    - cyclop # checks function and package cyclomatic complexity 
+    - decorder # check declaration order and count of types, constants, variables and functions 
+    - dogsled # Checks assignments with too many blank identifiers (e.g. x, _, _, _,  #= f()) 
+    - errchkjson # Checks types passed to the json encoding functions. Reports unsupported types and optionally reports occasions, where the check for the returned error can be omitted. 
+    - errname # Checks that sentinel errors are prefixed with the `Err` and error types are suffixed with the `Error`. 
+    - exhaustive # check exhaustiveness of enum switch statements and map literals 
+    - exportloopref # checks for pointers to enclosing loop variables 
+    - forcetypeassert # finds forced type assertions 
+    - gocognit # Computes and checks the cognitive complexity of functions 
+    - goconst # Finds repeated strings that could be replaced by a constant 
+    - gocritic # Provides diagnostics that check for bugs, performance and style issues. 
+    - gocyclo # Computes and checks the cyclomatic complexity of functions 
+    - godox # Tool for detection of FIXME, TODO and other comment keywords 
+    - goerr113 # Golang linter to check the errors handling expressions 
+    - goheader # Checks is file header matches to pattern 
+    - goprintffuncname # Checks that printf-like functions are named with `f` at the end 
+    - gosec # Inspects source code for security problems 
+    - grouper # An analyzer to analyze expression groups. 
+    - interfacebloat # A linter that checks the number of methods inside an interface. 
+    - ireturn # Accept Interfaces, Return Concrete Types 
+    - maintidx # maintidx measures the maintainability index of each function. 
+    - makezero # Finds slice declarations with non-zero initial length 
+    - misspell # Finds commonly misspelled English words in comments 
+    - nakedret # Finds naked returns in functions greater than a specified function length 
+    - nilerr # Finds the code that returns nil even if it checks that the error is not nil. 
+    - nonamedreturns # Reports all named returns 
+    - nosprintfhostport # Checks for misuse of Sprintf to construct a host with port in a URL. 
+    - prealloc # Finds slice declarations that could potentially be pre-allocated 
+    - predeclared # find code that shadows one of Go's predeclared identifiers 
+    - reassign # Checks that package variables are not reassigned 
+    - rowserrcheck # checks whether Err of rows is checked successfully 
+    - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed. 
+    - tagliatelle # Checks the struct tags. 
+    - tenv # tenv is analyzer that detects using os.Setenv instead of t.Setenv since Go1.17 
+    - testableexamples # linter checks if examples are testable (have an expected output) 
+    - testpackage # linter that makes you use a separate _test package 
+    - thelper # thelper detects golang test helpers without t.Helper() call and checks the consistency of test helpers 
+    - tparallel # tparallel detects inappropriate usage of t.Parallel() method in your Go test codes 
+    - unconvert # Remove unnecessary type conversions 
+    - unparam # Reports unused function parameters 
+    - usestdlibvars # A linter that detect the possibility to use variables/constants from the Go standard library. 
+    - wastedassign # wastedassign finds wasted assignment statements. 
+    - whitespace # Tool for detection of leading and trailing whitespace 
+    - dupword # checks for duplicate words in the source code 
+  disable:
+    - stylecheck # Stylecheck is a replacement for golint 
+    - varnamelen # checks that the length of a variable's name matches its scope 
+    - wrapcheck # Checks that errors returned from external packages are wrapped 
+    - paralleltest # paralleltest detects missing usage of t.Parallel() method in your Go test 
+    - wsl # Whitespace Linter - Forces you to use empty lines! 
+    - dupl # Tool for code clone detection 
+    - gofumpt # Gofumpt checks whether code was gofumpt-ed. 
+    - gomnd # An analyzer to detect magic numbers. 
+    - godot # Check if comments end in a period 
+    - revive # Fast, configurable, extensible, flexible, and beautiful linter for Go. Drop-in replacement of golint. 
+    - gochecknoglobals # check that no global variables exist 
+    - nlreturn # nlreturn checks for a new line before return and branch statements to increase code clarity 
+    - lll # Reports long lines 
+    - nestif # Reports deeply nested if statements 
+    - exhaustruct # Checks if all structure fields are initialized 
+    - funlen # Tool for detection of long functions 
