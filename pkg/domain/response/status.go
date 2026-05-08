@@ -39,6 +39,10 @@ var StatusConflict = Status{
 	StatusCode: http.StatusConflict,
 	StatusText: "Status: Conflict",
 }
+var StatusNoContent = Status{
+	StatusCode: http.StatusNoContent,
+	StatusText: "Status: No Content",
+}
 
 func (r Status) Equals(other Status) bool {
 	return r.StatusCode == other.StatusCode
