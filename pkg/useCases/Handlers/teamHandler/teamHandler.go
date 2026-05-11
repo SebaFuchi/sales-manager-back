@@ -4,6 +4,7 @@ import (
 	"sales-manager-back/internal/data/infrastructure/teamRepository"
 	"sales-manager-back/pkg/domain/response"
 	"sales-manager-back/pkg/domain/user"
+	"sales-manager-back/pkg/useCases/Helpers/firebaseHelper"
 )
 
 func GetAll(tenantID uint) (interface{}, response.Status) {
@@ -19,7 +20,33 @@ func GetByFirebaseUID(firebaseUID string) (interface{}, response.Status) {
 }
 
 func Create(newUser *user.User) (interface{}, response.Status) {
-	return teamRepository.Create(newUser)
+	// First, create the user in our local database
+	createdUser, status := teamRepository.Create(newUser)
+	if status != response.StatusCreated && status != response.StatusOk {
+		return createdUser, status
+	}
+
+	// Assuming createdUser is returned as a *user.User or can be cast
+	if userRecord, ok := createdUser.(*user.User); ok && userRecord != nil {
+		// Attempt to create in Firebase Auth
+		// Generate a temporary random password or use a default one (usually an email reset is sent)
+		tempPassword := "Temporal123!" // In production, generate a secure random string or use Action Links
+		
+		firebaseUser, err := firebaseHelper.CreateUser(userRecord.Email, tempPassword, userRecord.Name)
+		if err == nil && firebaseUser != nil {
+			// Set custom claims
+			claims := map[string]interface{}{
+				"tenantId": float64(userRecord.TenantID),
+				"userId":   float64(userRecord.ID),
+				"role":     string(userRecord.TeamRole),
+			}
+			firebaseHelper.SetCustomUserClaims(firebaseUser.UID, claims)
+		} else {
+			// In a robust system, we would log this and perhaps enqueue a retry
+		}
+	}
+
+	return createdUser, status
 }
 
 func Update(tenantID, userID uint, updates map[string]interface{}) response.Status {

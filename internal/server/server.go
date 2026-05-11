@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sales-manager-back/internal/server/routes"
 	"sales-manager-back/pkg/useCases/Helpers/databaseHelper"
+	"sales-manager-back/pkg/useCases/Helpers/firebaseHelper"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -66,6 +67,9 @@ func (serv *Server) Start() {
 	dbConn := databaseHelper.InitDB()
 	databaseHelper.Db = dbConn
 	log.Println("✓ Database connected and migrations executed")
+
+	// Initialize Firebase Admin SDK
+	firebaseHelper.InitFirebase()
 
 	log.Printf("✓ Sales Manager API server starting on %s", serv.server.Addr)
 	log.Printf("✓ Health check: http://localhost%s/health", serv.server.Addr)

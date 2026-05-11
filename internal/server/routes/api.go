@@ -12,8 +12,12 @@ func New() http.Handler {
 	// Initialize struct-based routers
 	sr := &SaleRouter{}
 	cr := &ClientRouter{}
+	tr := &TenantRouter{}
+	ar := &AuthRouter{}
 
 	// Mount all routers under /sales-manager prefix (already under /api from server.go)
+	r.Mount("/sales-manager/auth", ar.Routes())
+	r.Mount("/sales-manager/admin/tenants", tr.Routes())
 	r.Mount("/sales-manager/ventas", sr.Routes())
 	r.Mount("/sales-manager/clientes", cr.Routes())
 	r.Mount("/sales-manager/agenda", AgendaRouter())

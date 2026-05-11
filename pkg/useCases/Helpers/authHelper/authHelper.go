@@ -4,8 +4,10 @@ import (
 	"context"
 	"net/http"
 	"sales-manager-back/pkg/domain/response"
+	"sales-manager-back/pkg/useCases/Helpers/firebaseHelper"
 	"sales-manager-back/pkg/useCases/Helpers/responseHelper"
 	"strconv"
+	"strings"
 )
 
 // ContextKey es el tipo para las claves del contexto
@@ -15,9 +17,10 @@ const (
 	TenantIDKey ContextKey = "tenantID"
 	UserIDKey   ContextKey = "userID"
 	UserRoleKey ContextKey = "userRole"
+	FirebaseUID ContextKey = "firebaseUID"
 )
 
-// ExtractTenantID extrae el tenantID del header
+// ExtractTenantID extrae el tenantID del header (legacy)
 func ExtractTenantID(r *http.Request) (uint, error) {
 	tenantIDStr := r.Header.Get("X-Tenant-ID")
 	if tenantIDStr == "" {
@@ -32,66 +35,60 @@ func ExtractTenantID(r *http.Request) (uint, error) {
 	return uint(tenantID), nil
 }
 
-// ExtractUserID extrae el userID del header
-func ExtractUserID(r *http.Request) (uint, error) {
-	userIDStr := r.Header.Get("X-User-ID")
-	if userIDStr == "" {
-		return 0, http.ErrNoCookie
-	}
-
-	userID, err := strconv.ParseUint(userIDStr, 10, 32)
-	if err != nil {
-		return 0, err
-	}
-
-	return uint(userID), nil
-}
-
-// RequireAuth middleware validates both tenant and user authentication headers
-func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Validate Tenant ID
-		tenantID, err := ExtractTenantID(r)
-		if err != nil {
-			responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
-			return
-		}
-
-		// Validate User ID
-		userID, err := ExtractUserID(r)
-		if err != nil {
-			responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
-			return
-		}
-
-		// Add both to context
-		ctx := context.WithValue(r.Context(), TenantIDKey, tenantID)
-		ctx = context.WithValue(ctx, UserIDKey, userID)
-
-		next.ServeHTTP(w, r.WithContext(ctx))
-	}
-}
-
-// RequireAuthMiddleware is a chi-compatible middleware wrapper
+// RequireAuthMiddleware is a chi-compatible middleware wrapper that verifies Firebase JWT
 func RequireAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Validate Tenant ID
-		tenantID, err := ExtractTenantID(r)
-		if err != nil {
+		authHeader := r.Header.Get("Authorization")
+		
+		// Fallback legacy (si no hay Authorization, intenta usar los headers X-Tenant-ID para dev local si Firebase no está activo)
+		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+			if firebaseHelper.AuthClient == nil {
+				// MODO MOCK / DEV FALLBACK
+				tenantID, err := ExtractTenantID(r)
+				if err != nil {
+					responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
+					return
+				}
+				ctx := context.WithValue(r.Context(), TenantIDKey, tenantID)
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
 			responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
 			return
 		}
 
-		// Validate User ID
-		userID, err := ExtractUserID(r)
-		if err != nil {
+		idToken := strings.TrimPrefix(authHeader, "Bearer ")
+
+		// Verify Token
+		token, err := firebaseHelper.VerifyToken(idToken)
+		if err != nil || token == nil {
 			responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
 			return
 		}
 
-		// Add both to context
+		// Extract custom claims (may be missing for new users)
+		tenantIDFloat, ok := token.Claims["tenantId"].(float64)
+		var tenantID uint = 0
+		if ok {
+			tenantID = uint(tenantIDFloat)
+		}
+
+		userIDFloat, ok := token.Claims["userId"].(float64)
+		var userID uint = 0
+		if ok {
+			userID = uint(userIDFloat)
+		}
+
+		role, _ := token.Claims["role"].(string)
+		if role == "" {
+			role = "new_user" // default role for newly registered via Google without claims
+		}
+
+		// Set context
 		ctx := context.WithValue(r.Context(), TenantIDKey, tenantID)
 		ctx = context.WithValue(ctx, UserIDKey, userID)
+		ctx = context.WithValue(ctx, UserRoleKey, role)
+		ctx = context.WithValue(ctx, FirebaseUID, token.UID)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
