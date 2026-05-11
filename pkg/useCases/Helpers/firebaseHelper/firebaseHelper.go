@@ -3,6 +3,7 @@ package firebaseHelper
 import (
 	"context"
 	"log"
+	"os"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
@@ -11,17 +12,25 @@ import (
 
 var AuthClient *auth.Client
 
-// InitFirebase initializes the Firebase Admin SDK
-// It looks for serviceAccountKey.json in the project root or uses the FIREBASE_CREDENTIALS env var
+// InitFirebase initializes the Firebase Admin SDK.
+// In production, it reads from the FIREBASE_CREDENTIALS_JSON env var (injected by Jenkins).
+// In local dev, it falls back to serviceAccountKey.json in the project root.
 func InitFirebase() {
-	// Para este ejemplo, asumiremos que se provee el JSON de servicio en la raíz
-	// o que Google Application Default Credentials (ADC) está configurado.
-	opt := option.WithCredentialsFile("serviceAccountKey.json")
+	var opt option.ClientOption
+
+	credJSON := os.Getenv("FIREBASE_CREDENTIALS_JSON")
+	if credJSON != "" {
+		opt = option.WithCredentialsJSON([]byte(credJSON))
+		log.Println("Firebase: Using credentials from FIREBASE_CREDENTIALS_JSON env var")
+	} else {
+		opt = option.WithCredentialsFile("serviceAccountKey.json")
+		log.Println("Firebase: Using credentials from serviceAccountKey.json file")
+	}
 
 	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
 		log.Printf("Warning: error initializing firebase app: %v\n", err)
-		log.Printf("Firebase Auth validation will fail until serviceAccountKey.json is provided.")
+		log.Printf("Firebase Auth validation will fail until credentials are provided.")
 		return
 	}
 
