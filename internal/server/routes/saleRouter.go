@@ -3,12 +3,13 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+
 	"sales-manager-back/pkg/domain/response"
 	"sales-manager-back/pkg/domain/sale"
 	"sales-manager-back/pkg/useCases/Handlers/saleHandler"
 	"sales-manager-back/pkg/useCases/Helpers/authHelper"
 	"sales-manager-back/pkg/useCases/Helpers/responseHelper"
-	"strconv"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -16,22 +17,14 @@ import (
 type SaleRouter struct{}
 
 func (sr *SaleRouter) GetAll(w http.ResponseWriter, r *http.Request) {
-	tenantID, err := authHelper.ExtractTenantID(r)
-	if err != nil {
-		responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
-		return
-	}
+	tenantID := authHelper.GetTenantIDFromContext(r.Context())
 
 	sales, status := saleHandler.GetAll(tenantID)
 	responseHelper.WriteResponse(w, status, sales)
 }
 
 func (sr *SaleRouter) GetByVendedor(w http.ResponseWriter, r *http.Request) {
-	tenantID, err := authHelper.ExtractTenantID(r)
-	if err != nil {
-		responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
-		return
-	}
+	tenantID := authHelper.GetTenantIDFromContext(r.Context())
 
 	vendedorIDStr := r.URL.Query().Get("vendedorId")
 	vendedorID, err := strconv.ParseUint(vendedorIDStr, 10, 32)
@@ -45,11 +38,7 @@ func (sr *SaleRouter) GetByVendedor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (sr *SaleRouter) GetByID(w http.ResponseWriter, r *http.Request) {
-	tenantID, err := authHelper.ExtractTenantID(r)
-	if err != nil {
-		responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
-		return
-	}
+	tenantID := authHelper.GetTenantIDFromContext(r.Context())
 
 	saleID, err := strconv.ParseUint(chi.URLParam(r, "saleId"), 10, 32)
 	if err != nil {
@@ -62,11 +51,7 @@ func (sr *SaleRouter) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (sr *SaleRouter) Create(w http.ResponseWriter, r *http.Request) {
-	tenantID, err := authHelper.ExtractTenantID(r)
-	if err != nil {
-		responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
-		return
-	}
+	tenantID := authHelper.GetTenantIDFromContext(r.Context())
 
 	var newSale sale.Sale
 	if err := json.NewDecoder(r.Body).Decode(&newSale); err != nil {
@@ -80,11 +65,7 @@ func (sr *SaleRouter) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (sr *SaleRouter) Update(w http.ResponseWriter, r *http.Request) {
-	tenantID, err := authHelper.ExtractTenantID(r)
-	if err != nil {
-		responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
-		return
-	}
+	tenantID := authHelper.GetTenantIDFromContext(r.Context())
 
 	saleID, err := strconv.ParseUint(chi.URLParam(r, "saleId"), 10, 32)
 	if err != nil {
@@ -104,6 +85,8 @@ func (sr *SaleRouter) Update(w http.ResponseWriter, r *http.Request) {
 
 func (sr *SaleRouter) Routes() http.Handler {
 	r := chi.NewRouter()
+
+	r.Use(authHelper.RequireAuthMiddleware)
 
 	r.Get("/", sr.GetAll)
 	r.Get("/{saleId}", sr.GetByID)

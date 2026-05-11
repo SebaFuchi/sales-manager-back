@@ -3,12 +3,13 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+
 	"sales-manager-back/pkg/domain/client"
 	"sales-manager-back/pkg/domain/response"
 	"sales-manager-back/pkg/useCases/Handlers/clientHandler"
 	"sales-manager-back/pkg/useCases/Helpers/authHelper"
 	"sales-manager-back/pkg/useCases/Helpers/responseHelper"
-	"strconv"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -16,11 +17,7 @@ import (
 type ClientRouter struct{}
 
 func (cr *ClientRouter) GetAll(w http.ResponseWriter, r *http.Request) {
-	tenantID, err := authHelper.ExtractTenantID(r)
-	if err != nil {
-		responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
-		return
-	}
+	tenantID := authHelper.GetTenantIDFromContext(r.Context())
 
 	// Check if there's a vendedorId query param
 	vendedorIDStr := r.URL.Query().Get("vendedorId")
@@ -48,11 +45,7 @@ func (cr *ClientRouter) GetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cr *ClientRouter) GetByID(w http.ResponseWriter, r *http.Request) {
-	tenantID, err := authHelper.ExtractTenantID(r)
-	if err != nil {
-		responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
-		return
-	}
+	tenantID := authHelper.GetTenantIDFromContext(r.Context())
 
 	clientID, err := strconv.ParseUint(chi.URLParam(r, "clientId"), 10, 32)
 	if err != nil {
@@ -65,11 +58,7 @@ func (cr *ClientRouter) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cr *ClientRouter) Create(w http.ResponseWriter, r *http.Request) {
-	tenantID, err := authHelper.ExtractTenantID(r)
-	if err != nil {
-		responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
-		return
-	}
+	tenantID := authHelper.GetTenantIDFromContext(r.Context())
 
 	var newClient client.Client
 	if err := json.NewDecoder(r.Body).Decode(&newClient); err != nil {
@@ -83,11 +72,7 @@ func (cr *ClientRouter) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cr *ClientRouter) Update(w http.ResponseWriter, r *http.Request) {
-	tenantID, err := authHelper.ExtractTenantID(r)
-	if err != nil {
-		responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
-		return
-	}
+	tenantID := authHelper.GetTenantIDFromContext(r.Context())
 
 	clientID, err := strconv.ParseUint(chi.URLParam(r, "clientId"), 10, 32)
 	if err != nil {
@@ -107,6 +92,8 @@ func (cr *ClientRouter) Update(w http.ResponseWriter, r *http.Request) {
 
 func (cr *ClientRouter) Routes() http.Handler {
 	r := chi.NewRouter()
+
+	r.Use(authHelper.RequireAuthMiddleware)
 
 	r.Get("/", cr.GetAll)
 	r.Get("/{clientId}", cr.GetByID)

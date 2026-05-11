@@ -38,3 +38,12 @@ func GetByID(id uint) (tenant.Tenant, response.Status) {
 
 	return t, response.StatusOk
 }
+
+// Create adds a new tenant to the database
+func Create(newTenant *tenant.Tenant) (*tenant.Tenant, response.Status) {
+	db := databaseHelper.Db
+	if err := db.Create(newTenant).Error; err != nil {
+		return nil, response.StatusInternalServerError
+	}
+	return newTenant, response.StatusCreated
+}
