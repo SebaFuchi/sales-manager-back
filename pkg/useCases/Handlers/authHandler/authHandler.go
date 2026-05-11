@@ -49,8 +49,9 @@ func Register(uid string, req RegisterRequest) (interface{}, response.Status) {
 		TenantID:           newTenant.ID,
 		Name:               req.DisplayName,
 		Email:              req.Email,
-		TeamRole:           user.RoleAgency,
-		Status:             user.StatusActivo,
+		TeamRole:           user.EquipoRolTitular,
+		Role:               user.RoleAgency,
+		Status:             user.EstadoActivo,
 		SplitPercentageSub: 0,
 	}
 

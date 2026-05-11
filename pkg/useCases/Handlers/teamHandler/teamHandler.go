@@ -26,8 +26,9 @@ func Create(newUser *user.User) (interface{}, response.Status) {
 		return createdUser, status
 	}
 
-	// Assuming createdUser is returned as a *user.User or can be cast
-	if userRecord, ok := createdUser.(*user.User); ok && userRecord != nil {
+	// Assuming createdUser is returned as a *user.User
+	if createdUser != nil {
+		userRecord := createdUser
 		// Attempt to create in Firebase Auth
 		// Generate a temporary random password or use a default one (usually an email reset is sent)
 		tempPassword := "Temporal123!" // In production, generate a secure random string or use Action Links
