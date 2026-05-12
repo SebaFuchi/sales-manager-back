@@ -17,3 +17,11 @@ func GetByID(id uint) (interface{}, response.Status) {
 func Create(newTenant *tenant.Tenant) (interface{}, response.Status) {
 	return tenantRepository.Create(newTenant)
 }
+
+func Update(tenantID uint, updates map[string]interface{}) response.Status {
+	return tenantRepository.Update(tenantID, updates)
+}
+
+func Delete(tenantID uint) response.Status {
+	return tenantRepository.Delete(tenantID)
+}

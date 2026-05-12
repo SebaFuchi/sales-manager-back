@@ -112,3 +112,17 @@ func Search(tenantID uint, query string) ([]client.Client, response.Status) {
 
 	return clients, response.StatusOk
 }
+
+func Delete(tenantID, clientID uint) response.Status {
+	db := databaseHelper.Db
+
+	result := db.Where("tenant_id = ? AND id = ?", tenantID, clientID).Delete(&client.Client{})
+	if err := result.Error; err != nil {
+		return response.StatusInternalServerError
+	}
+	if result.RowsAffected == 0 {
+		return response.StatusNotFound
+	}
+
+	return response.StatusOk
+}

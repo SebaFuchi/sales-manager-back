@@ -90,6 +90,19 @@ func (cr *ClientRouter) Update(w http.ResponseWriter, r *http.Request) {
 	responseHelper.WriteResponse(w, status, nil)
 }
 
+func (cr *ClientRouter) Delete(w http.ResponseWriter, r *http.Request) {
+	tenantID := authHelper.GetTenantIDFromContext(r.Context())
+
+	clientID, err := strconv.ParseUint(chi.URLParam(r, "clientId"), 10, 32)
+	if err != nil {
+		responseHelper.WriteResponse(w, response.StatusBadRequest, nil)
+		return
+	}
+
+	status := clientHandler.Delete(tenantID, uint(clientID))
+	responseHelper.WriteResponse(w, status, nil)
+}
+
 func (cr *ClientRouter) Routes() http.Handler {
 	r := chi.NewRouter()
 
@@ -99,6 +112,7 @@ func (cr *ClientRouter) Routes() http.Handler {
 	r.Get("/{clientId}", cr.GetByID)
 	r.Post("/", cr.Create)
 	r.Put("/{clientId}", cr.Update)
+	r.Delete("/{clientId}", cr.Delete)
 
 	return r
 }

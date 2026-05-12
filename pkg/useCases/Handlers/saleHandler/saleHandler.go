@@ -25,3 +25,7 @@ func Create(newSale *sale.Sale) (interface{}, response.Status) {
 func Update(tenantID, saleID uint, updates map[string]interface{}) response.Status {
 	return saleRepository.Update(tenantID, saleID, updates)
 }
+
+func Delete(tenantID, saleID uint) response.Status {
+	return saleRepository.Delete(tenantID, saleID)
+}

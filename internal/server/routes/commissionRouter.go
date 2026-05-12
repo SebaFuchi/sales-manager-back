@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -37,6 +38,26 @@ func CommissionRouter() http.Handler {
 		}
 
 		responseHelper.WriteResponse(w, status, commissions)
+	})
+
+	// PATCH /commissions/{commissionId} - Update commission fields (e.g. factoryStatus)
+	router.Patch("/{commissionId}", func(w http.ResponseWriter, r *http.Request) {
+		tenantID := authHelper.GetTenantIDFromContext(r.Context())
+
+		commissionID, err := strconv.ParseUint(chi.URLParam(r, "commissionId"), 10, 32)
+		if err != nil {
+			responseHelper.WriteResponse(w, response.StatusBadRequest, nil)
+			return
+		}
+
+		var updates map[string]interface{}
+		if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+			responseHelper.WriteResponse(w, response.StatusBadRequest, nil)
+			return
+		}
+
+		status := commissionHandler.Update(tenantID, uint(commissionID), updates)
+		responseHelper.WriteResponse(w, status, nil)
 	})
 
 	return router

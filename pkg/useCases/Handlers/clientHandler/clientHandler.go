@@ -29,3 +29,7 @@ func Update(tenantID, clientID uint, updates map[string]interface{}) response.St
 func Search(tenantID uint, query string) (interface{}, response.Status) {
 	return clientRepository.Search(tenantID, query)
 }
+
+func Delete(tenantID, clientID uint) response.Status {
+	return clientRepository.Delete(tenantID, clientID)
+}

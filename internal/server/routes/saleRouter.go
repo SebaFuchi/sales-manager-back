@@ -83,6 +83,19 @@ func (sr *SaleRouter) Update(w http.ResponseWriter, r *http.Request) {
 	responseHelper.WriteResponse(w, status, nil)
 }
 
+func (sr *SaleRouter) Delete(w http.ResponseWriter, r *http.Request) {
+	tenantID := authHelper.GetTenantIDFromContext(r.Context())
+
+	saleID, err := strconv.ParseUint(chi.URLParam(r, "saleId"), 10, 32)
+	if err != nil {
+		responseHelper.WriteResponse(w, response.StatusBadRequest, nil)
+		return
+	}
+
+	status := saleHandler.Delete(tenantID, uint(saleID))
+	responseHelper.WriteResponse(w, status, nil)
+}
+
 func (sr *SaleRouter) Routes() http.Handler {
 	r := chi.NewRouter()
 
@@ -92,6 +105,7 @@ func (sr *SaleRouter) Routes() http.Handler {
 	r.Get("/{saleId}", sr.GetByID)
 	r.Post("/", sr.Create)
 	r.Put("/{saleId}", sr.Update)
+	r.Delete("/{saleId}", sr.Delete)
 
 	return r
 }

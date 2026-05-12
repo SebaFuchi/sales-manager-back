@@ -4,6 +4,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"sales-manager-back/pkg/domain/response"
+	"sales-manager-back/pkg/useCases/Handlers/tenantHandler"
+	"sales-manager-back/pkg/useCases/Helpers/authHelper"
+	"sales-manager-back/pkg/useCases/Helpers/responseHelper"
 )
 
 func New() http.Handler {
@@ -27,6 +31,20 @@ func New() http.Handler {
 	r.Mount("/sales-manager/pipeline", PipelineRouter())
 	r.Mount("/sales-manager/dashboard", DashboardRouter())
 	r.Mount("/sales-manager/cobranzas", CollectionRouter())
+
+	// My Agency: returns the tenant data for the currently authenticated user
+	r.Route("/sales-manager/mi-agencia", func(sub chi.Router) {
+		sub.Use(authHelper.RequireAuthMiddleware)
+		sub.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			tenantID := authHelper.GetTenantIDFromContext(r.Context())
+			if tenantID == 0 {
+				responseHelper.WriteResponse(w, response.StatusBadRequest, nil)
+				return
+			}
+			tenantData, status := tenantHandler.GetByID(tenantID)
+			responseHelper.WriteResponse(w, status, tenantData)
+		})
+	})
 
 	return r
 }

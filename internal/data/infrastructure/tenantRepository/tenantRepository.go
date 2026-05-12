@@ -47,3 +47,33 @@ func Create(newTenant *tenant.Tenant) (*tenant.Tenant, response.Status) {
 	}
 	return newTenant, response.StatusCreated
 }
+
+// Update updates a tenant by ID
+func Update(tenantID uint, updates map[string]interface{}) response.Status {
+	db := databaseHelper.Db
+
+	result := db.Model(&tenant.Tenant{}).Where("id = ?", tenantID).Updates(updates)
+	if err := result.Error; err != nil {
+		return response.StatusInternalServerError
+	}
+	if result.RowsAffected == 0 {
+		return response.StatusNotFound
+	}
+
+	return response.StatusOk
+}
+
+// Delete soft-deletes a tenant by ID
+func Delete(tenantID uint) response.Status {
+	db := databaseHelper.Db
+
+	result := db.Delete(&tenant.Tenant{}, tenantID)
+	if err := result.Error; err != nil {
+		return response.StatusInternalServerError
+	}
+	if result.RowsAffected == 0 {
+		return response.StatusNotFound
+	}
+
+	return response.StatusOk
+}

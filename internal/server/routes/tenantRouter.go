@@ -73,6 +73,46 @@ func (tr *TenantRouter) Create(w http.ResponseWriter, r *http.Request) {
 	responseHelper.WriteResponse(w, status, created)
 }
 
+func (tr *TenantRouter) Update(w http.ResponseWriter, r *http.Request) {
+	role, _ := r.Context().Value(authHelper.UserRoleKey).(string)
+	if role != string(user.RoleSuperAdmin) {
+		responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
+		return
+	}
+
+	idParam, err := strconv.ParseUint(chi.URLParam(r, "tenantId"), 10, 32)
+	if err != nil {
+		responseHelper.WriteResponse(w, response.StatusBadRequest, nil)
+		return
+	}
+
+	var updates map[string]interface{}
+	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
+		responseHelper.WriteResponse(w, response.StatusBadRequest, nil)
+		return
+	}
+
+	status := tenantHandler.Update(uint(idParam), updates)
+	responseHelper.WriteResponse(w, status, nil)
+}
+
+func (tr *TenantRouter) Delete(w http.ResponseWriter, r *http.Request) {
+	role, _ := r.Context().Value(authHelper.UserRoleKey).(string)
+	if role != string(user.RoleSuperAdmin) {
+		responseHelper.WriteResponse(w, response.StatusUnauthorized, nil)
+		return
+	}
+
+	idParam, err := strconv.ParseUint(chi.URLParam(r, "tenantId"), 10, 32)
+	if err != nil {
+		responseHelper.WriteResponse(w, response.StatusBadRequest, nil)
+		return
+	}
+
+	status := tenantHandler.Delete(uint(idParam))
+	responseHelper.WriteResponse(w, status, nil)
+}
+
 func (tr *TenantRouter) Routes() http.Handler {
 	r := chi.NewRouter()
 
@@ -81,6 +121,8 @@ func (tr *TenantRouter) Routes() http.Handler {
 	r.Get("/", tr.GetAll)
 	r.Post("/", tr.Create)
 	r.Get("/{tenantId}", tr.GetByID)
+	r.Put("/{tenantId}", tr.Update)
+	r.Delete("/{tenantId}", tr.Delete)
 
 	return r
 }

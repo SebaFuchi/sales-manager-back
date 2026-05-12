@@ -92,3 +92,17 @@ func Update(tenantID, saleID uint, updates map[string]interface{}) response.Stat
 
 	return response.StatusOk
 }
+
+func Delete(tenantID, saleID uint) response.Status {
+	db := databaseHelper.Db
+
+	result := db.Where("tenant_id = ? AND id = ?", tenantID, saleID).Delete(&sale.Sale{})
+	if err := result.Error; err != nil {
+		return response.StatusInternalServerError
+	}
+	if result.RowsAffected == 0 {
+		return response.StatusNotFound
+	}
+
+	return response.StatusOk
+}
