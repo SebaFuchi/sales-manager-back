@@ -52,7 +52,7 @@ func Create(newTenant *tenant.Tenant) (*tenant.Tenant, response.Status) {
 func Update(tenantID uint, updates map[string]interface{}) response.Status {
 	db := databaseHelper.Db
 
-	result := db.Model(&tenant.Tenant{}).Where("id = ?", tenantID).Updates(updates)
+	result := db.Model(&tenant.Tenant{}).Where("id = ?", tenantID).Updates(databaseHelper.CamelToSnakeMap(updates))
 	if err := result.Error; err != nil {
 		return response.StatusInternalServerError
 	}

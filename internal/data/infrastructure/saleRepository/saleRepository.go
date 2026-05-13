@@ -77,7 +77,7 @@ func Update(tenantID, saleID uint, updates map[string]interface{}) response.Stat
 
 	result := db.Model(&sale.Sale{}).
 		Where("tenant_id = ? AND id = ?", tenantID, saleID).
-		Updates(updates)
+		Updates(databaseHelper.CamelToSnakeMap(updates))
 
 	if err := result.Error; err != nil {
 		if err == gorm.ErrRecordNotFound {

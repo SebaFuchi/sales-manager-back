@@ -19,6 +19,18 @@ type SaleRouter struct{}
 func (sr *SaleRouter) GetAll(w http.ResponseWriter, r *http.Request) {
 	tenantID := authHelper.GetTenantIDFromContext(r.Context())
 
+	vendedorIDStr := r.URL.Query().Get("vendedorId")
+	if vendedorIDStr != "" {
+		vendedorID, err := strconv.ParseUint(vendedorIDStr, 10, 32)
+		if err != nil {
+			responseHelper.WriteResponse(w, response.StatusBadRequest, nil)
+			return
+		}
+		sales, status := saleHandler.GetByVendedor(tenantID, uint(vendedorID))
+		responseHelper.WriteResponse(w, status, sales)
+		return
+	}
+
 	sales, status := saleHandler.GetAll(tenantID)
 	responseHelper.WriteResponse(w, status, sales)
 }

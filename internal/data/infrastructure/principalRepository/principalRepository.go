@@ -13,9 +13,9 @@ func GetAll(tenantID uint) ([]principal.Principal, response.Status) {
 	db := databaseHelper.Db
 
 	result := db.Where("tenant_id = ?", tenantID).
-		Preload("Listas").
-		Preload("Catalogos").
-		Preload("Promociones").
+		Preload("PriceLists").
+		Preload("Catalogs").
+		Preload("Promotions").
 		Find(&principals)
 
 	if err := result.Error; err != nil {
@@ -30,9 +30,9 @@ func GetByID(tenantID, principalID uint) (principal.Principal, response.Status) 
 	db := databaseHelper.Db
 
 	result := db.Where("tenant_id = ? AND id = ?", tenantID, principalID).
-		Preload("Listas").
-		Preload("Catalogos").
-		Preload("Promociones").
+		Preload("PriceLists").
+		Preload("Catalogs").
+		Preload("Promotions").
 		First(&principalItem)
 
 	if err := result.Error; err != nil {
@@ -64,7 +64,7 @@ func Update(tenantID, principalID uint, updates map[string]interface{}) response
 
 	result := db.Model(&principal.Principal{}).
 		Where("tenant_id = ? AND id = ?", tenantID, principalID).
-		Updates(updates)
+		Updates(databaseHelper.CamelToSnakeMap(updates))
 
 	if err := result.Error; err != nil {
 		return response.StatusInternalServerError

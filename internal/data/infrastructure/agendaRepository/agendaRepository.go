@@ -71,7 +71,7 @@ func Update(tenantID, eventID uint, updates map[string]interface{}) response.Sta
 
 	result := db.Model(&agenda.AgendaEvent{}).
 		Where("tenant_id = ? AND id = ?", tenantID, eventID).
-		Updates(updates)
+		Updates(databaseHelper.CamelToSnakeMap(updates))
 
 	if err := result.Error; err != nil {
 		return response.StatusInternalServerError

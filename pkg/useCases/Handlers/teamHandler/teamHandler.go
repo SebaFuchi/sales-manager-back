@@ -26,22 +26,29 @@ func Create(newUser *user.User) (*user.User, response.Status) {
 		return createdUser, status
 	}
 
-	// Attempt to create in Firebase Auth
+	// Attempt to create or fetch in Firebase Auth
 	if createdUser != nil {
-		// Generate a temporary random password or use a default one (usually an email reset is sent)
-		tempPassword := "Temporal123!" // In production, generate a secure random string or use Action Links
-		
-		firebaseUser, err := firebaseHelper.CreateUser(createdUser.Email, tempPassword, createdUser.Name)
-		if err == nil && firebaseUser != nil {
+		// Check if user already exists
+		firebaseUser, err := firebaseHelper.GetUserByEmail(createdUser.Email)
+		if err != nil || firebaseUser == nil {
+			tempPassword := "Temporal123!" // In production, generate a secure random string or use Action Links
+			firebaseUser, err = firebaseHelper.CreateUser(createdUser.Email, tempPassword, createdUser.Name)
+		}
+
+		if firebaseUser != nil {
 			// Set custom claims
 			claims := map[string]interface{}{
 				"tenantId": float64(createdUser.TenantID),
 				"userId":   float64(createdUser.ID),
-				"role":     string(createdUser.TeamRole),
+				"role":     string(createdUser.Role),
 			}
 			firebaseHelper.SetCustomUserClaims(firebaseUser.UID, claims)
-		} else {
-			// In a robust system, we would log this and perhaps enqueue a retry
+
+			// Save the FirebaseUID back to our local database so GetByFirebaseUID works on login
+			teamRepository.Update(createdUser.TenantID, createdUser.ID, map[string]interface{}{
+				"firebase_uid": firebaseUser.UID,
+			})
+			createdUser.FirebaseUID = firebaseUser.UID
 		}
 	}
 

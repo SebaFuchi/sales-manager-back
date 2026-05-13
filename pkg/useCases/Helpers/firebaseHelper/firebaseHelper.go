@@ -75,3 +75,11 @@ func CreateUser(email string, password string, displayName string) (*auth.UserRe
 
 	return AuthClient.CreateUser(context.Background(), params)
 }
+
+// GetUserByEmail retrieves a user by email
+func GetUserByEmail(email string) (*auth.UserRecord, error) {
+	if AuthClient == nil {
+		return nil, nil
+	}
+	return AuthClient.GetUserByEmail(context.Background(), email)
+}

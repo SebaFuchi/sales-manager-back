@@ -80,7 +80,7 @@ func Update(tenantID, clientID uint, updates map[string]interface{}) response.St
 
 	result := db.Model(&client.Client{}).
 		Where("tenant_id = ? AND id = ?", tenantID, clientID).
-		Updates(updates)
+		Updates(databaseHelper.CamelToSnakeMap(updates))
 
 	if err := result.Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -101,7 +101,7 @@ func Search(tenantID uint, query string) ([]client.Client, response.Status) {
 	db := databaseHelper.Db
 
 	searchPattern := "%" + query + "%"
-	result := db.Where("tenant_id = ? AND (razon_social LIKE ? OR nombre_fantasia LIKE ? OR cuit LIKE ?)",
+	result := db.Where("tenant_id = ? AND (legal_name LIKE ? OR trade_name LIKE ? OR tax_id LIKE ?)",
 		tenantID, searchPattern, searchPattern, searchPattern).
 		Preload("Conditions").
 		Find(&clients)

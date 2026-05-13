@@ -53,6 +53,7 @@ func Register(uid string, req RegisterRequest) (interface{}, response.Status) {
 		Role:               user.RoleAgency,
 		Status:             user.EstadoActivo,
 		SplitPercentageSub: 0,
+		FirebaseUID:        uid,
 	}
 
 	if err := tx.Create(&newUser).Error; err != nil {

@@ -32,17 +32,18 @@ func New() http.Handler {
 	r.Mount("/sales-manager/dashboard", DashboardRouter())
 	r.Mount("/sales-manager/cobranzas", CollectionRouter())
 
-	// My Agency: returns the tenant data for the currently authenticated user
+	// My Agency: returns the tenant data for the currently authenticated user,
+	// enriched with live counts from related tables
 	r.Route("/sales-manager/mi-agencia", func(sub chi.Router) {
 		sub.Use(authHelper.RequireAuthMiddleware)
-		sub.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			tenantID := authHelper.GetTenantIDFromContext(r.Context())
+		sub.Get("/", func(w http.ResponseWriter, rr *http.Request) {
+			tenantID := authHelper.GetTenantIDFromContext(rr.Context())
 			if tenantID == 0 {
 				responseHelper.WriteResponse(w, response.StatusBadRequest, nil)
 				return
 			}
-			tenantData, status := tenantHandler.GetByID(tenantID)
-			responseHelper.WriteResponse(w, status, tenantData)
+			enriched, status := tenantHandler.GetMyAgency(tenantID)
+			responseHelper.WriteResponse(w, status, enriched)
 		})
 	})
 

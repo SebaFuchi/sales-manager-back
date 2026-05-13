@@ -85,7 +85,7 @@ func UpdateQuickNote(tenantID, noteID uint, updates map[string]interface{}) resp
 
 	result := db.Model(&dashboard.QuickNote{}).
 		Where("tenant_id = ? AND id = ?", tenantID, noteID).
-		Updates(updates)
+		Updates(databaseHelper.CamelToSnakeMap(updates))
 
 	if err := result.Error; err != nil {
 		return response.StatusInternalServerError
@@ -147,7 +147,7 @@ func UpdateGoal(tenantID, goalID uint, updates map[string]interface{}) response.
 
 	result := db.Model(&dashboard.Goal{}).
 		Where("tenant_id = ? AND id = ?", tenantID, goalID).
-		Updates(updates)
+		Updates(databaseHelper.CamelToSnakeMap(updates))
 
 	if err := result.Error; err != nil {
 		return response.StatusInternalServerError

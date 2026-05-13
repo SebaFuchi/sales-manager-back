@@ -52,7 +52,7 @@ func Update(tenantID, dealID uint, updates map[string]interface{}) response.Stat
 
 	result := db.Model(&pipeline.Deal{}).
 		Where("tenant_id = ? AND id = ?", tenantID, dealID).
-		Updates(updates)
+		Updates(databaseHelper.CamelToSnakeMap(updates))
 
 	if err := result.Error; err != nil {
 		return response.StatusInternalServerError
