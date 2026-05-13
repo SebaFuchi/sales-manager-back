@@ -22,6 +22,10 @@ func Create(newClient *client.Client) (interface{}, response.Status) {
 	return clientRepository.Create(newClient)
 }
 
+func BulkCreate(clients []client.Client) response.Status {
+	return clientRepository.BulkCreate(clients)
+}
+
 func Update(tenantID, clientID uint, updates map[string]interface{}) response.Status {
 	return clientRepository.Update(tenantID, clientID, updates)
 }

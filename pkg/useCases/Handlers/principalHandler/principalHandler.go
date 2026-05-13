@@ -18,6 +18,10 @@ func Create(newPrincipal *principal.Principal) (interface{}, response.Status) {
 	return principalRepository.Create(newPrincipal)
 }
 
+func BulkCreate(principals []principal.Principal) response.Status {
+	return principalRepository.BulkCreate(principals)
+}
+
 func Update(tenantID, principalID uint, updates map[string]interface{}) response.Status {
 	return principalRepository.Update(tenantID, principalID, updates)
 }

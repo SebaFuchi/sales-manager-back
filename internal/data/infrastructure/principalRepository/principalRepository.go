@@ -59,6 +59,17 @@ func Create(newPrincipal *principal.Principal) (*principal.Principal, response.S
 	return newPrincipal, response.StatusCreated
 }
 
+func BulkCreate(principals []principal.Principal) response.Status {
+	db := databaseHelper.Db
+
+	result := db.CreateInBatches(principals, 100)
+	if err := result.Error; err != nil {
+		return response.StatusInternalServerError
+	}
+
+	return response.StatusCreated
+}
+
 func Update(tenantID, principalID uint, updates map[string]interface{}) response.Status {
 	db := databaseHelper.Db
 

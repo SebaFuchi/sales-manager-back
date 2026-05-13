@@ -22,19 +22,19 @@ func New() http.Handler {
 	// Mount all routers under /sales-manager prefix (already under /api from server.go)
 	r.Mount("/sales-manager/auth", ar.Routes())
 	r.Mount("/sales-manager/admin/tenants", tr.Routes())
-	r.Mount("/sales-manager/ventas", sr.Routes())
-	r.Mount("/sales-manager/clientes", cr.Routes())
-	r.Mount("/sales-manager/agenda", AgendaRouter())
-	r.Mount("/sales-manager/representadas", PrincipalRouter())
-	r.Mount("/sales-manager/comisiones", CommissionRouter())
-	r.Mount("/sales-manager/equipo", TeamRouter())
+	r.Mount("/sales-manager/sales", sr.Routes())
+	r.Mount("/sales-manager/clients", cr.Routes())
+	r.Mount("/sales-manager/events", AgendaRouter())
+	r.Mount("/sales-manager/principals", PrincipalRouter())
+	r.Mount("/sales-manager/commissions", CommissionRouter())
+	r.Mount("/sales-manager/team", TeamRouter())
 	r.Mount("/sales-manager/pipeline", PipelineRouter())
 	r.Mount("/sales-manager/dashboard", DashboardRouter())
-	r.Mount("/sales-manager/cobranzas", CollectionRouter())
+	r.Mount("/sales-manager/collections", CollectionRouter())
 
 	// My Agency: returns the tenant data for the currently authenticated user,
 	// enriched with live counts from related tables
-	r.Route("/sales-manager/mi-agencia", func(sub chi.Router) {
+	r.Route("/sales-manager/my-agency", func(sub chi.Router) {
 		sub.Use(authHelper.RequireAuthMiddleware)
 		sub.Get("/", func(w http.ResponseWriter, rr *http.Request) {
 			tenantID := authHelper.GetTenantIDFromContext(rr.Context())

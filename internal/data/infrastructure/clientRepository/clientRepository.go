@@ -75,6 +75,17 @@ func Create(newClient *client.Client) (*client.Client, response.Status) {
 	return newClient, response.StatusCreated
 }
 
+func BulkCreate(clients []client.Client) response.Status {
+	db := databaseHelper.Db
+
+	result := db.CreateInBatches(clients, 100)
+	if err := result.Error; err != nil {
+		return response.StatusInternalServerError
+	}
+
+	return response.StatusCreated
+}
+
 func Update(tenantID, clientID uint, updates map[string]interface{}) response.Status {
 	db := databaseHelper.Db
 
