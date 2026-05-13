@@ -44,7 +44,7 @@ func Register(uid string, req RegisterRequest) (interface{}, response.Status) {
 		return existingTenant, response.StatusOk
 	}
 
-	// ── No existing user — create Tenant + User from scratch ──
+	// ── No existing user — check if Tenant exists or create both ──
 	tx := db.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -52,26 +52,29 @@ func Register(uid string, req RegisterRequest) (interface{}, response.Status) {
 		}
 	}()
 
-	// 1. Create the Tenant (Agency)
-	newTenant := tenant.Tenant{
-		Name:             req.CompanyName,
-		Owner:            req.DisplayName,
-		Email:            req.Email,
-		Plan:             tenant.PlanStarter,
-		Status:           tenant.EstadoTrial,
-		RegistrationDate: time.Now().Format("2006-01-02"),
-		LastActivity:     time.Now().Format("2006-01-02"),
+	var targetTenant tenant.Tenant
+	if err := tx.Where("email = ?", req.Email).First(&targetTenant).Error; err != nil {
+		// 1. Create the Tenant (Agency) since it doesn't exist
+		targetTenant = tenant.Tenant{
+			Name:             req.CompanyName,
+			Owner:            req.DisplayName,
+			Email:            req.Email,
+			Plan:             tenant.PlanStarter,
+			Status:           tenant.EstadoTrial,
+			RegistrationDate: time.Now().Format("2006-01-02"),
+			LastActivity:     time.Now().Format("2006-01-02"),
+		}
+
+		if err := tx.Create(&targetTenant).Error; err != nil {
+			tx.Rollback()
+			log.Printf("Error creating tenant: %v", err)
+			return nil, response.StatusInternalServerError
+		}
 	}
 
-	if err := tx.Create(&newTenant).Error; err != nil {
-		tx.Rollback()
-		log.Printf("Error creating tenant: %v", err)
-		return nil, response.StatusInternalServerError
-	}
-
-	// 2. Create the User (Agency Owner)
+	// 2. Create the User (Agency Owner) and link to targetTenant
 	newUser := user.User{
-		TenantID:           newTenant.ID,
+		TenantID:           targetTenant.ID,
 		Name:               req.DisplayName,
 		Email:              req.Email,
 		TeamRole:           user.EquipoRolTitular,
@@ -94,9 +97,9 @@ func Register(uid string, req RegisterRequest) (interface{}, response.Status) {
 	}
 
 	// 3. Update Firebase Custom Claims
-	setClaims(uid, newTenant.ID, newUser.ID, user.RoleAgency)
+	setClaims(uid, targetTenant.ID, newUser.ID, user.RoleAgency)
 
-	return newTenant, response.StatusCreated
+	return targetTenant, response.StatusCreated
 }
 
 // setClaims sets Firebase custom claims for the given user
