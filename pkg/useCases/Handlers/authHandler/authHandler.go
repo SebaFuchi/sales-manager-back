@@ -19,7 +19,32 @@ type RegisterRequest struct {
 func Register(uid string, req RegisterRequest) (interface{}, response.Status) {
 	db := databaseHelper.Db
 
-	// Start a transaction since we are creating multiple related records
+	// ── Check if a user with this FirebaseUID already exists ──
+	var existingUser user.User
+	if err := db.Where("firebase_uid = ?", uid).First(&existingUser).Error; err == nil {
+		// User already exists — just re-set claims and return the tenant
+		var existingTenant tenant.Tenant
+		db.First(&existingTenant, existingUser.TenantID)
+
+		setClaims(uid, existingTenant.ID, existingUser.ID, existingUser.Role)
+		log.Printf("Register: user already exists (UID=%s, email=%s), re-set claims", uid, req.Email)
+		return existingTenant, response.StatusOk
+	}
+
+	// ── Check if a user with this email already exists (created by admin or previous partial attempt) ──
+	if err := db.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
+		// User record exists but has no FirebaseUID — link it
+		db.Model(&user.User{}).Where("id = ?", existingUser.ID).Update("firebase_uid", uid)
+
+		var existingTenant tenant.Tenant
+		db.First(&existingTenant, existingUser.TenantID)
+
+		setClaims(uid, existingTenant.ID, existingUser.ID, existingUser.Role)
+		log.Printf("Register: linked existing user (email=%s) to Firebase UID=%s", req.Email, uid)
+		return existingTenant, response.StatusOk
+	}
+
+	// ── No existing user — create Tenant + User from scratch ──
 	tx := db.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -69,18 +94,21 @@ func Register(uid string, req RegisterRequest) (interface{}, response.Status) {
 	}
 
 	// 3. Update Firebase Custom Claims
+	setClaims(uid, newTenant.ID, newUser.ID, user.RoleAgency)
+
+	return newTenant, response.StatusCreated
+}
+
+// setClaims sets Firebase custom claims for the given user
+func setClaims(uid string, tenantID, userID uint, role user.UserRole) {
 	claims := map[string]interface{}{
-		"tenantId": float64(newTenant.ID),
-		"userId":   float64(newUser.ID),
-		"role":     string(user.RoleAgency),
+		"tenantId": float64(tenantID),
+		"userId":   float64(userID),
+		"role":     string(role),
 	}
 
 	err := firebaseHelper.SetCustomUserClaims(uid, claims)
 	if err != nil {
-		// Log the error but don't fail the request, the user was created in DB.
-		// In a robust system, we would have a retry mechanism.
 		log.Printf("CRITICAL: Failed to set Firebase claims for UID %s: %v", uid, err)
 	}
-
-	return newTenant, response.StatusCreated
 }
