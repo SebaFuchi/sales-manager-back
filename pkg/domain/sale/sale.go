@@ -33,8 +33,9 @@ type Sale struct {
 	AgentName        string         `json:"agentName"`
 	NetAmount        float64        `json:"netAmount" gorm:"not null;default:0"`
 	SaleStatus       EstadoVenta    `json:"saleStatus" gorm:"type:varchar(20);not null;default:'Pedido'"`
-	CollectionStatus EstadoCobranza `json:"collectionStatus" gorm:"type:varchar(20);not null;default:'Pendiente'"`
-	Notes            string         `json:"notes" gorm:"type:text"`
+	CollectionStatus   EstadoCobranza `json:"collectionStatus" gorm:"type:varchar(20);not null;default:'Pendiente'"`
+	CommissionOverride *float64       `json:"commissionOverride" gorm:"type:decimal(5,2)"`
+	Notes              string         `json:"notes" gorm:"type:text"`
 
 	// Relations
 	Items []SaleItem `json:"items" gorm:"foreignKey:SaleID;constraint:OnDelete:CASCADE"`

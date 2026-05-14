@@ -22,6 +22,7 @@ type Deal struct {
 	Stage           PipelineStage `json:"stage" gorm:"type:varchar(20);not null;default:'prospecto'"`
 	AgentName       string        `json:"agentName" gorm:"not null"`
 	AgentID         uint          `json:"agentId" gorm:"not null;index"`
-	Date            string        `json:"date" gorm:"not null;index"`
-	Notes           string        `json:"notes" gorm:"type:text"`
+	Date               string        `json:"date" gorm:"not null;index"`
+	CommissionOverride *float64      `json:"commissionOverride" gorm:"type:decimal(5,2)"`
+	Notes              string        `json:"notes" gorm:"type:text"`
 }

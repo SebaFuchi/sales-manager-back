@@ -69,6 +69,9 @@ func Create(newSale *sale.Sale) (interface{}, response.Status) {
 
 		// Calculate commission amounts
 		percentage := principalItem.BaseCommission
+		if newSale.CommissionOverride != nil {
+			percentage = *newSale.CommissionOverride
+		}
 		gross := newSale.NetAmount * (percentage / 100)
 		expenses := 0.0 // Can be extended later
 		net := gross - expenses
